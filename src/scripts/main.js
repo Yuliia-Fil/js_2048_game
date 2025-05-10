@@ -3,10 +3,11 @@
 // Uncomment the next lines to use your game instance in the browser
 const Game = require('../modules/Game.class');
 const initialState = [
- [0, 0, 0, 0],
- [0, 0, 0, 0],
- [0, 0, 0, 0],
- [0, 0, 0, 0]];
+  [0, 0, 0, 0],
+  [0, 0, 0, 0],
+  [0, 0, 0, 0],
+  [0, 0, 0, 0],
+];
 const game = new Game(initialState);
 
 // #region buttonStart

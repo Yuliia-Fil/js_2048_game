@@ -23,27 +23,36 @@ class Game {
   constructor(initialState) {
     this.initialState = initialState;
     this.currentState = initialState.map((el) => [...el]);
+    this.tbody = document.querySelector('tbody');
+    this.score = 0;
   }
 
-  createNewCell(moveDone = true) {
-    if (!moveDone) {
-      return;
-    }
+  renderHTML() {
+    this.currentState.forEach((row, rowIndex) => {
+      const tr = this.tbody.children[rowIndex];
+      const cells = [...tr.children];
 
-    let row, cell;
+      cells.forEach((cell, cellIndex) => {
+        if (row[cellIndex] === 0) {
+          this.clearCell(cell);
+        } else {
+          cell.textContent = row[cellIndex];
+          cell.className = 'field-cell';
+          cell.classList.add(`field-cell--${row[cellIndex]}`);
+        }
+      });
+    });
+  }
+
+  createNewCell() {
+    let rowIndex, cellIndex;
 
     do {
-      row = Math.floor(Math.random() * 4);
-      cell = Math.floor(Math.random() * 4);
-    } while (this.currentState[row][cell] !== 0);
+      rowIndex = Math.floor(Math.random() * 4);
+      cellIndex = Math.floor(Math.random() * 4);
+    } while (this.currentState[rowIndex][cellIndex] !== 0);
 
-    const tbody = document.querySelector('tbody');
-    const newCell = tbody.children[row].children[cell];
-
-    newCell.classList.add('field-cell--2');
-    newCell.textContent = '2';
-    this.currentState[row][cell] = 2;
-    newCell.style.color = 'red'; //delete after debug
+    this.currentState[rowIndex][cellIndex] = 2;
   }
 
   clearCell(cell) {
@@ -53,76 +62,110 @@ class Game {
 
   moveLeft() {}
   moveRight() {}
-  moveUp() {}
-  moveDown() {
-    const tbody = document.querySelector('tbody');
+  moveUp() {
     let moveDone = false;
 
-    for (let row = 2; row >= 0; row--) {
-      for (let cell = 0; cell < 4; cell++) {
-        let currentCell = this.currentState[row][cell];
+    for (let rowIndex = 1; rowIndex < 4; rowIndex++) {
+      for (let cellIndex = 0; cellIndex < 4; cellIndex++) {
+        let currentCell = this.currentState[rowIndex][cellIndex];
 
         if (currentCell === 0) {
           continue;
         }
 
-        let lowerCell = this.currentState[row + 1][cell];
-        let n = 1;
-        let k = 0;
+        let n = 0;
+        let upperCell = this.currentState[rowIndex - n - 1][cellIndex];
 
-        while (lowerCell === 0 && row + n < 4) {
+        while (upperCell === 0 || upperCell === currentCell) {
           moveDone = true;
-          lowerCell = currentCell;
 
-          const currentCellTd = tbody.children[row + k].children[cell];
-          this.clearCell(currentCellTd);
+          if (upperCell === 0) {
+            this.currentState[rowIndex - n - 1][cellIndex] = currentCell;
+            this.currentState[rowIndex - n][cellIndex] = 0;
 
-          const lowerCellTd = tbody.children[row + n].children[cell];
+            n++;
 
-          lowerCellTd.textContent = lowerCell;
-          lowerCellTd.className = 'field-cell';
-          lowerCellTd.classList.add(`field-cell--${lowerCell}`);
-          lowerCellTd.style.color = ''; //delete after debug
-          this.currentState[row + n][cell] = lowerCell;
-          this.currentState[row + k][cell] = 0;
-
-          n++;
-          k++;
-
-          if (row + k < 3) {
-            currentCell = this.currentState[row + k][cell];
-          }
-
-          if (row + n < 4) {
-            lowerCell = this.currentState[row + n][cell];
+            if (rowIndex - n > 0) {
+              currentCell = this.currentState[rowIndex - n][cellIndex];
+              upperCell = this.currentState[rowIndex - n - 1][cellIndex];
+            } else {
+              break;
+            }
+          } else {
+            this.currentState[rowIndex - n - 1][cellIndex] = currentCell * 2;
+            this.currentState[rowIndex - n][cellIndex] = 0;
+            this.score += currentCell * 2;
+            this.getScore();
+            break;
           }
         }
-
-        // if (lowerCell === currentCell) {
-        //   moveDone = true;
-        //   lowerCell = currentCell * 2;
-        //   currentCell = tbody.children[row].children[cell];
-        //   this.clearCell(currentCell);
-
-        //   const lowerCellTd = tbody.children[row + 1].children[cell];
-
-        //   lowerCellTd.textContent = lowerCell;
-        //   lowerCellTd.className = 'field-cell';
-        //   lowerCellTd.classList.add(`field-cell--${lowerCell}`);
-        //   this.currentState[row + 1][cell] = lowerCell;
-        //   this.currentState[row][cell] = 0;
-        // }
       }
     }
-    this.createNewCell(moveDone);
+
+    if (moveDone) {
+      if (this.getStatus() === 'playing') {
+        this.createNewCell();
+      }
+    }
+
+    this.renderHTML();
+  }
+  moveDown() {
+    let moveDone = false;
+
+    for (let rowIndex = 2; rowIndex >= 0; rowIndex--) {
+      for (let cellIndex = 0; cellIndex < 4; cellIndex++) {
+        let currentCell = this.currentState[rowIndex][cellIndex];
+
+        if (currentCell === 0) {
+          continue;
+        }
+
+        let n = 0;
+        let lowerCell = this.currentState[rowIndex + n + 1][cellIndex];
+
+        while (lowerCell === 0 || lowerCell === currentCell) {
+          moveDone = true;
+
+          if (lowerCell === 0) {
+            this.currentState[rowIndex + n + 1][cellIndex] = currentCell;
+            this.currentState[rowIndex + n][cellIndex] = 0;
+
+            n++;
+
+            if (rowIndex + n < 3) {
+              currentCell = this.currentState[rowIndex + n][cellIndex];
+              lowerCell = this.currentState[rowIndex + n + 1][cellIndex];
+            } else {
+              break;
+            }
+          } else {
+            this.currentState[rowIndex + n + 1][cellIndex] = currentCell * 2;
+            this.currentState[rowIndex + n][cellIndex] = 0;
+            this.score += currentCell * 2;
+            this.getScore();
+            break;
+          }
+        }
+      }
+    }
+
+    if (moveDone) {
+      if (this.getStatus() === 'playing') {
+        this.createNewCell();
+      }
+    }
+
+    this.renderHTML();
   }
 
   /**
    * @returns {number}
    */
   getScore() {
-    this.scoreField = document.querySelector('game-score');
-    this.score = 0;
+    const scoreField = document.querySelector('.game-score');
+
+    scoreField.textContent = this.score;
   }
 
   /**
@@ -140,13 +183,36 @@ class Game {
    * `win` - the game is won;
    * `lose` - the game is lost
    */
-  getStatus() {}
+  getStatus() {
+    const fullField = this.currentState.every((row) => {
+      return row.every((cell) => cell !== 0);
+    });
+
+    const is2048 = this.currentState.some((row) => {
+      return row.some((cell) => cell === 2048);
+    });
+
+    if (is2048) {
+      document.querySelector('.message-win').classList.remove('hidden');
+
+      return 'win';
+    }
+
+    if (fullField) {
+      document.querySelector('.message-lose').classList.remove('hidden');
+
+      return 'lose';
+    }
+
+    return 'playing';
+  }
 
   /**
    * Starts the game.
    */
   start() {
     this.createNewCell();
+    this.renderHTML();
     document.querySelector('.message-start').classList.add('hidden');
   }
 
@@ -154,12 +220,13 @@ class Game {
    * Resets the game.
    */
   restart() {
-    this.currentState = this.initialState;
-
-    const cells = [...document.querySelectorAll('td')];
-
-    cells.forEach(this.clearCell);
+    document.querySelector('.message-win').classList.add('hidden');
+    document.querySelector('.message-lose').classList.add('hidden');
+    this.currentState = this.initialState.map((el) => [...el]);
+    this.score = 0;
+    this.getScore();
     this.createNewCell();
+    this.renderHTML();
   }
 
   // Add your own methods here
