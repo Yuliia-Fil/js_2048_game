@@ -344,6 +344,7 @@ class Game {
    */
   start() {
     this.createNewCell();
+    this.createNewCell();
     this.renderHTML();
     document.querySelector('.message-start').classList.add('hidden');
   }
@@ -357,6 +358,7 @@ class Game {
     this.currentState = this.initialState.map((el) => [...el]);
     this.score = 0;
     this.getScore();
+    this.createNewCell();
     this.createNewCell();
     this.renderHTML();
   }
