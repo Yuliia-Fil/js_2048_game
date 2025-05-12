@@ -96,191 +96,85 @@ class Game {
     cell.textContent = '';
   }
 
-  moveLeft() {
+  move(direction) {
+    const isVertical = direction === 'up' || direction === 'down';
+    const step = direction === 'left' || direction === 'up' ? -1 : 1;
+    const start = step === 1 ? 3 : 0;
+    const end = (i) => (step === 1 ? i >= 0 : i < 4);
+
     let moveDone = false;
 
-    this.currentState.forEach((row) => {
-      row.forEach((cell, cellIndex) => {
-        if (cell === 0 || cellIndex === 0) {
-          return;
+    for (let rowIndex = start; end(rowIndex); rowIndex -= step) {
+      for (let cellIndex = start; end(cellIndex); cellIndex -= step) {
+        let n = 0;
+        let row = rowIndex;
+        let col = cellIndex;
+        let nextRow = isVertical ? rowIndex + (n + 1) * step : rowIndex;
+        let nextCol = isVertical ? cellIndex : cellIndex + (n + 1) * step;
+
+        let currentCell = this.currentState[row][col];
+        let nextCell;
+
+        if (currentCell === 0) {
+          continue;
         }
 
-        let n = 0;
-        let currentCell = row[cellIndex - n];
-        let leftCell = row[cellIndex - n - 1];
+        if (nextRow >= 0 && nextRow < 4) {
+          nextCell = this.currentState[nextRow][nextCol];
+        }
 
-        while (leftCell === 0 || leftCell === currentCell) {
+        while (nextCell === 0 || nextCell === currentCell) {
           moveDone = true;
 
-          if (leftCell === 0) {
-            row[cellIndex - n - 1] = currentCell;
-            row[cellIndex - n] = 0;
+          if (nextCell === 0) {
+            this.currentState[nextRow][nextCol] = currentCell;
+            this.currentState[row][col] = 0;
 
             n++;
 
-            if (cellIndex - n > 0) {
-              currentCell = row[cellIndex - n];
-              leftCell = row[cellIndex - n - 1];
+            row = isVertical ? rowIndex + n * step : rowIndex;
+            col = isVertical ? cellIndex : cellIndex + n * step;
+            nextRow = isVertical ? rowIndex + (n + 1) * step : rowIndex;
+            nextCol = isVertical ? cellIndex : cellIndex + (n + 1) * step;
+
+            if (nextRow >= 0 && nextRow < 4 && nextCol >= 0 && nextCol < 4) {
+              currentCell = this.currentState[row][col];
+              nextCell = this.currentState[nextRow][nextCol];
             } else {
-              return;
+              break;
             }
           } else {
-            row[cellIndex - n - 1] = currentCell * 2;
-            row[cellIndex - n] = 0;
+            this.currentState[nextRow][nextCol] = currentCell * 2;
+            this.currentState[row][col] = 0;
             this.score += currentCell * 2;
             this.getScore();
-
-            return;
+            break;
           }
         }
-      });
-    });
+      }
+    }
 
     if (moveDone) {
       this.createNewCell();
       this.renderHTML();
       this.getStatus();
     }
+  }
+
+  moveLeft() {
+    this.move('left');
   }
 
   moveRight() {
-    let moveDone = false;
-
-    for (let rowIndex = 0; rowIndex < 4; rowIndex++) {
-      for (let cellIndex = 2; cellIndex >= 0; cellIndex--) {
-        let currentCell = this.currentState[rowIndex][cellIndex];
-
-        if (currentCell === 0) {
-          continue;
-        }
-
-        let n = 0;
-        let rightCell = this.currentState[rowIndex][cellIndex + n + 1];
-
-        while (rightCell === 0 || rightCell === currentCell) {
-          moveDone = true;
-
-          if (rightCell === 0) {
-            this.currentState[rowIndex][cellIndex + n + 1] = currentCell;
-            this.currentState[rowIndex][cellIndex + n] = 0;
-
-            n++;
-
-            if (rowIndex - n > 0) {
-              currentCell = this.currentState[rowIndex][cellIndex + n];
-              rightCell = this.currentState[rowIndex][cellIndex + n + 1];
-            } else {
-              break;
-            }
-          } else {
-            this.currentState[rowIndex][cellIndex + n + 1] = currentCell * 2;
-            this.currentState[rowIndex][cellIndex + n] = 0;
-            this.score += currentCell * 2;
-            this.getScore();
-            break;
-          }
-        }
-      }
-    }
-
-    if (moveDone) {
-      this.createNewCell();
-      this.renderHTML();
-      this.getStatus();
-    }
+    this.move('right');
   }
+
   moveUp() {
-    let moveDone = false;
-
-    for (let rowIndex = 1; rowIndex < 4; rowIndex++) {
-      for (let cellIndex = 0; cellIndex < 4; cellIndex++) {
-        let currentCell = this.currentState[rowIndex][cellIndex];
-
-        if (currentCell === 0) {
-          continue;
-        }
-
-        let n = 0;
-        let upperCell = this.currentState[rowIndex - n - 1][cellIndex];
-
-        while (upperCell === 0 || upperCell === currentCell) {
-          moveDone = true;
-
-          if (upperCell === 0) {
-            this.currentState[rowIndex - n - 1][cellIndex] = currentCell;
-            this.currentState[rowIndex - n][cellIndex] = 0;
-
-            n++;
-
-            if (rowIndex - n > 0) {
-              currentCell = this.currentState[rowIndex - n][cellIndex];
-              upperCell = this.currentState[rowIndex - n - 1][cellIndex];
-            } else {
-              break;
-            }
-          } else {
-            this.currentState[rowIndex - n - 1][cellIndex] = currentCell * 2;
-            this.currentState[rowIndex - n][cellIndex] = 0;
-            this.score += currentCell * 2;
-            this.getScore();
-            break;
-          }
-        }
-      }
-    }
-
-    if (moveDone) {
-      this.createNewCell();
-      this.renderHTML();
-      this.getStatus();
-    }
+    this.move('up');
   }
 
   moveDown() {
-    let moveDone = false;
-
-    for (let rowIndex = 2; rowIndex >= 0; rowIndex--) {
-      for (let cellIndex = 0; cellIndex < 4; cellIndex++) {
-        let currentCell = this.currentState[rowIndex][cellIndex];
-
-        if (currentCell === 0) {
-          continue;
-        }
-
-        let n = 0;
-        let lowerCell = this.currentState[rowIndex + n + 1][cellIndex];
-
-        while (lowerCell === 0 || lowerCell === currentCell) {
-          moveDone = true;
-
-          if (lowerCell === 0) {
-            this.currentState[rowIndex + n + 1][cellIndex] = currentCell;
-            this.currentState[rowIndex + n][cellIndex] = 0;
-
-            n++;
-
-            if (rowIndex + n < 3) {
-              currentCell = this.currentState[rowIndex + n][cellIndex];
-              lowerCell = this.currentState[rowIndex + n + 1][cellIndex];
-            } else {
-              break;
-            }
-          } else {
-            this.currentState[rowIndex + n + 1][cellIndex] = currentCell * 2;
-            this.currentState[rowIndex + n][cellIndex] = 0;
-            this.score += currentCell * 2;
-            this.getScore();
-            break;
-          }
-        }
-      }
-    }
-
-    if (moveDone) {
-      this.createNewCell();
-      this.renderHTML();
-      this.getStatus();
-    }
+    this.move('down');
   }
 
   /**
